@@ -1,7 +1,14 @@
 import { getChannelId, getVideos, getVideoStats } from './api.js';
 import { decodeHtml } from './utils.js';
 import { mockVideosData} from "./mockData";
-import { USE_MOCK_DATA} from "./constants";
+import {MAX_RESULTS, USE_MOCK_DATA} from "./constants";
+
+
+let allVideoIds = []; // Stores all video IDs
+let allVideosSorted = []; // Stores all videos sorted by likes
+let lastIndex = 0; // Index of the last video loaded
+const videosPerPage = 25; // How many videos to load per page
+
 
 // Helper function to create DOM elements with class and text
 function createElementWithClassAndText(tag, className, textContent, videoId) {
@@ -137,10 +144,27 @@ async function refreshData() {
   updatePopup(videos);
 }
 
+// function showLoadMoreButton() {
+//   const loadMoreContainer = document.getElementById('load-more-container');
+//   loadMoreContainer.style.display = 'block';
+// }
+
 function showLoadMoreButton() {
   const loadMoreContainer = document.getElementById('load-more-container');
-  loadMoreContainer.style.display = 'block';
+  if (loadMoreContainer) {
+    loadMoreContainer.style.display = 'block';
+
+    // Check if the event listener has already been added to avoid multiple attachments
+    const loadMoreButton = document.getElementById('load-more-button');
+    if (loadMoreButton && !loadMoreButton.hasAttribute('listener')) {
+      loadMoreButton.addEventListener('click', LoadButtonClicked);
+      loadMoreButton.setAttribute('listener', 'true'); // Mark the button to indicate the listener is attached
+    }
+  } else {
+    console.error('Load more container not found');
+  }
 }
+
 
 function hideLoadMoreButton() {
   const loadMoreContainer = document.getElementById('load-more-container');
@@ -152,6 +176,11 @@ function isScrolledToBottom() {
   const scrollOffset = 5; // leeway in pixels
   return frameElement.scrollHeight - frameElement.scrollTop - frameElement.clientHeight < scrollOffset;
 }
+
+async function LoadButtonClicked() {
+  console.log("Load more button clicked");
+}
+
 
 document.querySelector('.frame').addEventListener('scroll', () => {
   if (isScrolledToBottom()) {
