@@ -1,13 +1,13 @@
 import { getChannelId, getVideos, getVideoStats } from './api.js';
 import { decodeHtml } from './utils.js';
 import { mockVideosData} from "./mockData";
-import {MAX_RESULTS, USE_MOCK_DATA} from "./constants";
+import {MAX_SORTED_VIDEOS, USE_MOCK_DATA} from "./constants";
 
 
 let allVideoIds = []; // Stores all video IDs
 let allVideosSorted = []; // Stores all videos sorted by likes
 let lastIndex = 0; // Index of the last video loaded
-const videosPerPage = 25; // How many videos to load per page
+const videosPerPage = 10; // How many videos to load per page
 
 
 // Helper function to create DOM elements with class and text
@@ -96,7 +96,7 @@ async function updatePopup(videos) {
   }, 2000);
 
   // Initialize arrays to store top videos based on likes and like/view ratio
-  let highestRatioVideos = Array(10).fill({ ratio: 0, title: "", likes: "", views: "", id: "" });
+  let highestRatioVideos = Array(MAX_SORTED_VIDEOS).fill({ ratio: 0, title: "", likes: "", views: "", id: "" });
 
   for (let video of videos) {
     let { views, likes, id, ratio } = await fetchVideoStats(video.id.videoId);
