@@ -8,7 +8,7 @@ let allVideoIds = []; // Stores all video IDs
 let allVideosSorted = []; // Stores all videos sorted by likes
 let lastIndex = 0; // Index of the last video loaded
 const videosPerPage = 10; // How many videos to load per page
-
+let highestRatioVideos = Array(MAX_SORTED_VIDEOS).fill({ ratio: 0, title: "", likes: "", views: "", id: "" });
 
 // Helper function to create DOM elements with class and text
 function createElementWithClassAndText(tag, className, textContent, videoId) {
@@ -82,6 +82,7 @@ function updateTopVideos(topVideos, metricValue, video, likes, views, metricKey)
 
 /**
  * Updates the popup with the most liked videos and videos with the highest like/view ratio.
+ * Only updates the initial list, and prepares the rest of the data
  * @param {Array} videos - An array of video objects to be processed.
  */
 async function updatePopup(videos) {
@@ -96,19 +97,34 @@ async function updatePopup(videos) {
   }, 2000);
 
   // Initialize arrays to store top videos based on likes and like/view ratio
-  let highestRatioVideos = Array(MAX_SORTED_VIDEOS).fill({ ratio: 0, title: "", likes: "", views: "", id: "" });
+  // let highestRatioVideos = Array(MAX_SORTED_VIDEOS).fill({ ratio: 0, title: "", likes: "", views: "", id: "" });
 
   for (let video of videos) {
     let { views, likes, id, ratio } = await fetchVideoStats(video.id.videoId);
-
     // Maintains the top 3 videos with the highest like/view ratio
     updateTopVideos(highestRatioVideos, ratio, video, likes, views, 'ratio');
   }
 
 
   // Update the DOM with the top videos
-  await updateDOMList("highestRatioVideos", highestRatioVideos);
+  // await updateDOMList("highestRatioVideos", highestRatioVideos);
+    displayVideosPage();
 }
+
+function displayVideosPage() {
+  // Calculate the next set of videos to display
+  const videosToShow = highestRatioVideos.slice(lastIndex, lastIndex + videosPerPage);
+  updateDOMList(".video-list", videosToShow); // Make sure the selector matches your actual list container
+  lastIndex += videosPerPage; // Update the index to the next set of videos
+
+  // Determine if we should still show the "Load More" button
+  if (lastIndex >= allVideosSorted.length) {
+    hideLoadMoreButton();
+  } else {
+    showLoadMoreButton();
+  }
+}
+
 
 // TODO: not sure if this is needed!
 async function refreshData() {
@@ -179,6 +195,7 @@ function isScrolledToBottom() {
 
 async function LoadButtonClicked() {
   console.log("Load more button clicked");
+  displayVideosPage();
 }
 
 
@@ -200,7 +217,6 @@ chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     .catch(console.error);
 });
 
-// document.getElementById('refreshButton').addEventListener('click', refreshData);
 
 if (USE_MOCK_DATA) {
   console.log("using mock data)")
